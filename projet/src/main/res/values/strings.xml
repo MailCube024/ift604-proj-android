@@ -1,7 +1,12 @@
 <resources>
     <string name="app_name">IFT604-projet</string>
 
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_map">Map</string>
+    <string name="title_activity_ranking">Ranking</string>
+    <string name="title_activity_statistics">Statistics</string>
+
+    <string name="ranking">Ranking</string>
+    <string name="statistics">Statistics</string>
+    <string name="event">Event</string>
 </resources>
