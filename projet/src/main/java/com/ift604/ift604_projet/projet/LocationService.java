@@ -19,9 +19,6 @@ public class LocationService extends Service implements ConnectionCallbacks, OnC
     private GoogleApiClient mGoogleApiClient;
     private LocalBroadcastManager mBroadcaster;
 
-    public LocationService() {
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -76,11 +73,10 @@ public class LocationService extends Service implements ConnectionCallbacks, OnC
     public void onLocationChanged(Location location) {
         if (location.hasAccuracy()) {
             Log.d("Location", "Accuracy : " + location.getAccuracy());
-
             if (location.getAccuracy() < 20) {
-                Intent intent = new Intent("Location");
-                Log.d("Location", "Changed !");
                 if (location != null) {
+                    Log.d("Location", "Changed !");
+                    Intent intent = new Intent("Location");
                     intent.putExtra("Lat", location.getLatitude());
                     intent.putExtra("Long", location.getLongitude());
                     mBroadcaster.sendBroadcast(intent);
