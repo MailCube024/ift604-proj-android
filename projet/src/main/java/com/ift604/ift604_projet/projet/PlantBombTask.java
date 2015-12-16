@@ -12,8 +12,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class PlantBombTask extends AsyncTask<Double, Void, String> {
-    private static final String BASE_URL = "http://localhost/%s/";
-    private static final String SERVICE = "Mobile/PlantBomb/%1$,.2f/%1$,.2f";
+    public static String mBaseUrl;
+    public static String mService;
 
     private Context mContext;
     private String mProfile;
@@ -29,8 +29,9 @@ public class PlantBombTask extends AsyncTask<Double, Void, String> {
         String result = null;
 
         try {
-            URL url = new URL(String.format(BASE_URL, mProfile) + String.format(SERVICE, params[0], params[1]));
+            URL url = new URL(String.format(mBaseUrl, mProfile) + String.format(mService, params[0], params[1]));
             urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("POST");
 
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
             result = streamToString(in);
@@ -51,7 +52,7 @@ public class PlantBombTask extends AsyncTask<Double, Void, String> {
             if(result != null) {
                 Toast msg = null;
                 JSONObject json = new JSONObject(result);
-                boolean isPlanted = json.getBoolean("result");
+                boolean isPlanted = json.getBoolean("Planted");
 
 
                 if (isPlanted)

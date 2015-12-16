@@ -41,6 +41,11 @@
             android:enabled="true"
             android:exported="true" >
         </service>
+        <service
+            android:name=".GameEventsService"
+            android:enabled="true"
+            android:exported="true" >
+        </service>
     </application>
 
 </manifest>
