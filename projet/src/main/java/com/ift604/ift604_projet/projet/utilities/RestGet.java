@@ -30,11 +30,12 @@ public class RestGet extends AsyncTask<String, String, JSONArray> {
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
             urlConnection.connect();
-            //Object test = urlConnection.getContent();
-            in = new BufferedInputStream(urlConnection.getInputStream());
 
-            if(in != null)
-                result = RestUtil.convertInputStreamToString(in);
+            if (urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                in = new BufferedInputStream(urlConnection.getInputStream());
+                if (in != null)
+                    result = RestUtil.convertInputStreamToString(in);
+            }
 
         } catch (Exception e ) {
             e.printStackTrace();

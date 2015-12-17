@@ -21,18 +21,23 @@
             android:text="@string/settings"/>
     </LinearLayout>
 
+    <TextView
+            android:id="@+id/txtUsername"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"/>
+
     <Button
         android:id="@+id/btnRanking"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight=".25"
         android:text="@string/ranking"/>
-    <Button
-        android:id="@+id/btnStatistics"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight=".25"
-        android:text="@string/statistics"/>
+    <!--<Button-->
+        <!--android:id="@+id/btnStatistics"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_weight=".25"-->
+        <!--android:text="@string/statistics"/>-->
     <Button
         android:id="@+id/btnEvent"
         android:layout_width="match_parent"

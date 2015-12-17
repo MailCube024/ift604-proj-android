@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import com.ift604.ift604_projet.projet.MapActivity;
 import com.ift604.ift604_projet.projet.R;
 
@@ -11,8 +12,9 @@ public class MainActivity extends CommunicationActivity {
 
     Button btnRanking;
     Button btnSettings;
-    Button btnStatistics;
+//    Button btnStatistics;
     Button btnEvent;
+    TextView txtUsername;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,8 +23,9 @@ public class MainActivity extends CommunicationActivity {
 
         btnRanking = (Button)findViewById(R.id.btnRanking);
         btnSettings = (Button)findViewById(R.id.btnSettings);
-        btnStatistics = (Button)findViewById(R.id.btnStatistics);
+//        btnStatistics = (Button)findViewById(R.id.btnStatistics);
         btnEvent = (Button)findViewById(R.id.btnEvent);
+        txtUsername = (TextView)findViewById(R.id.txtUsername);
 
         btnSettings.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -38,12 +41,12 @@ public class MainActivity extends CommunicationActivity {
             }
         });
 
-        btnStatistics.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, StatisticsActivity.class));
-            }
-        });
+//        btnStatistics.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                startActivity(new Intent(MainActivity.this, StatisticsActivity.class));
+//            }
+//        });
 
         btnEvent.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -59,8 +62,13 @@ public class MainActivity extends CommunicationActivity {
 
         boolean logged = boundService.Login();
 
+        if(logged) {
+            txtUsername.setText(boundService.GetLoginInfo().get("username"));
+        } else {
+            txtUsername.setText("");
+        }
         btnRanking.setEnabled(logged);
-        btnStatistics.setEnabled(logged);
+//        btnStatistics.setEnabled(logged);
         btnEvent.setEnabled(logged);
     }
 }

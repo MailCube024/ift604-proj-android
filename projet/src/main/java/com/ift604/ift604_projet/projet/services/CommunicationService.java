@@ -136,12 +136,21 @@ public class CommunicationService extends Service {
     }
 
     public List<String> GetRanking() {
-        //Get(getServerPath() + "Ranking", null)
+        List<Pair<String,String>> params = new ArrayList<>();
+        params.add(new Pair<>("username", communicationProperties.getProperty("username")));
+
         List<String> l = new ArrayList<>();
-        l.add("Test - 32 points");
-        l.add("Test2 - 30 points");
-        l.add("Test3 - 15 points");
-        l.add("Test4 - 1 points");
+
+        try {
+            JSONArray a = Get(getServerPath() + "Rankings/List", params);
+            for(int i = 0; i < a.length(); ++i) {
+                JSONObject o = a.getJSONObject(i);
+                l.add(i + " - " + o.getString("Name") + " - " + o.getString("Score") + " points");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
         return l;
     }
 
