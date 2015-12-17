@@ -10,17 +10,18 @@ import org.json.JSONObject;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Locale;
 
 public class PlantBombTask extends AsyncTask<Double, Void, String> {
     public static String mBaseUrl;
     public static String mService;
 
     private Context mContext;
-    private String mProfile;
+    private String mUsername;
 
-    public PlantBombTask(Context context, String profile) {
+    public PlantBombTask(Context context, String username) {
         mContext = context;
-        mProfile = profile;
+        mUsername = username;
     }
 
     @Override
@@ -28,10 +29,16 @@ public class PlantBombTask extends AsyncTask<Double, Void, String> {
         HttpURLConnection urlConnection = null;
         String result = null;
 
+        Log.d("Bomb", "Planting...");
+
         try {
-            URL url = new URL(String.format(mBaseUrl, mProfile) + String.format(mService, params[0], params[1]));
+            URL url = new URL(mBaseUrl + String.format(Locale.US, mService, params[0], params[1], mUsername));
             urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setRequestMethod("POST");
+            // Use POST method
+            urlConnection.setRequestMethod( "POST" );
+            urlConnection.setDoOutput(true);
+            urlConnection.setRequestProperty( "Content-Type", "application/json");
+            urlConnection.setRequestProperty( "Content-Length", new Integer(0).toString());
 
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
             result = streamToString(in);
@@ -53,7 +60,6 @@ public class PlantBombTask extends AsyncTask<Double, Void, String> {
                 Toast msg = null;
                 JSONObject json = new JSONObject(result);
                 boolean isPlanted = json.getBoolean("Planted");
-
 
                 if (isPlanted)
                     msg = Toast.makeText(mContext, "Bomb planted !", Toast.LENGTH_LONG);
