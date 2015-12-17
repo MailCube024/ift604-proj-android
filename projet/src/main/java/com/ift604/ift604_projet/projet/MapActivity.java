@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.AsyncTask;
 import android.os.Vibrator;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -18,47 +17,64 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 
 public class MapActivity extends FragmentActivity {
+    private static final String BASE_URL = "http://localhost:60631/";
+    private static final String DISTANCE_SERVICE = "Bomb/ClosestDistance?latitude=%1$,.2f&longitude=%1$,.2f";
+    private static final String DEFUSE_SERVICE = "Bomb/Defuse?bombId=%d";
+    private static final String PLANT_SERVICE = "Bomb/Plant?latitude=%1$,.2f&longitude=%1$,.2f";
+
     private GoogleMap mMap;
-    private BroadcastReceiver mReceiver;
-    private CheckPositionTask mCheckPosition;
+    private BroadcastReceiver mLocationReceiver;
+    private BroadcastReceiver mGameEventsReceiver;
+    private ClosestDistanceTask mClosestDistance;
     private PlantBombTask mPlantBomb;
-    private DiffuseBombTask mDiffuseBomb;
-    private Button mDiffuseButton;
-    private boolean mIsDiffusingMode;
+    private DefuseBombTask mDefuseBomb;
+    private Button mDefuseButton;
+    private Boolean mIsDefusingMode;
     private String mProfile;
     private LatLng mCurrentLatLng;
+    public Integer mBombId;
 
     //For testing
     LatLng testingBomb;
+    //
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-        mIsDiffusingMode = false;
+        // Set URLs
+        ClosestDistanceTask.mBaseUrl = DefuseBombTask.mBaseUrl = PlantBombTask.mBaseUrl = BASE_URL;
+        ClosestDistanceTask.mService = DISTANCE_SERVICE;
+        DefuseBombTask.mService = DEFUSE_SERVICE;
+        PlantBombTask.mService = PLANT_SERVICE;
+
+        //For testing
+        mIsDefusingMode = false;
         mProfile = "Toto";
+        //
 
-        mDiffuseButton = (Button) findViewById(R.id.diffuseButton);
+        mDefuseButton = (Button) findViewById(R.id.defuseButton);
 
-        mDiffuseButton.setOnClickListener(new View.OnClickListener() {
+        mDefuseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mDiffuseBomb = new DiffuseBombTask(getBaseContext(), mProfile, mDiffuseButton);
-                mDiffuseBomb.execute(mCurrentLatLng.latitude, mCurrentLatLng.longitude);
+                mDefuseBomb = new DefuseBombTask(getBaseContext(), mProfile, mDefuseButton);
+                mDefuseBomb.execute(mBombId);
 
                 // For testing
                 Vibrator mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 mVibrator.cancel();
-                mDiffuseButton.setVisibility(View.INVISIBLE);
+                mDefuseButton.setVisibility(View.INVISIBLE);
+                //
             }
         });
 
         setUpMapIfNeeded();
         mMap.setMyLocationEnabled(true);
 
-        // Position updates
-        mReceiver = new BroadcastReceiver() {
+        // Handler for receiving messages from LocationService
+        mLocationReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Log.d("Location", "Position received !");
@@ -66,10 +82,10 @@ public class MapActivity extends FragmentActivity {
                 Double latitude = intent.getDoubleExtra("Lat", 0);
                 Double longitude = intent.getDoubleExtra("Long", 0);
 
-                if(mIsDiffusingMode) {
-                    mCheckPosition = new CheckPositionTask(getBaseContext(), mProfile, mDiffuseButton);
+                if (mIsDefusingMode) {
+                    mClosestDistance = new ClosestDistanceTask(getBaseContext(), mDefuseButton);
 
-                    mCheckPosition.execute(latitude, longitude);
+                    mClosestDistance.execute(latitude, longitude);
                     mCurrentLatLng = new LatLng(latitude, longitude);
 
                     // For testing
@@ -79,19 +95,26 @@ public class MapActivity extends FragmentActivity {
 
                     long[] closePattern = {0, 200, 1000};
                     long[] veryClosePattern = {0, 200, 500};
-                    long[] diffusePattern = {0, 50, 0};
+                    long[] defusePattern = {0, 50, 0};
                     Vibrator mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
                     if (distance < 10) {
-                        mVibrator.vibrate(diffusePattern, 0);
-                        mDiffuseButton.setVisibility(View.VISIBLE);
-                    }
-                    else if (distance < 50)
+                        mVibrator.vibrate(defusePattern, 0);
+                        mDefuseButton.setVisibility(View.VISIBLE);
+                    } else if (distance < 50)
                         mVibrator.vibrate(veryClosePattern, 0);
                     else if (distance < 100)
                         mVibrator.vibrate(closePattern, 0);
-
+                    //
                 }
+            }
+        };
+
+        // Handler for receiving messages from GameEventsService
+        mGameEventsReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                // TODO
             }
         };
     }
@@ -100,6 +123,7 @@ public class MapActivity extends FragmentActivity {
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
+        startService(new Intent(MapActivity.this, GameEventsService.class));
         startService(new Intent(MapActivity.this, LocationService.class));
     }
 
@@ -107,6 +131,7 @@ public class MapActivity extends FragmentActivity {
     protected void onPause() {
         super.onPause();
         setUpMapIfNeeded();
+        stopService(new Intent(MapActivity.this, GameEventsService.class));
         stopService(new Intent(MapActivity.this, LocationService.class));
 
         Vibrator mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -116,14 +141,13 @@ public class MapActivity extends FragmentActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        LocalBroadcastManager.getInstance(this).registerReceiver((mReceiver),
-                new IntentFilter("Location")
-        );
+        LocalBroadcastManager.getInstance(this).registerReceiver((mLocationReceiver), new IntentFilter("Location"));
+        LocalBroadcastManager.getInstance(this).registerReceiver((mGameEventsReceiver), new IntentFilter("GameEvents"));
     }
 
     @Override
     protected void onStop() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mLocationReceiver);
         super.onStop();
     }
 
@@ -165,13 +189,14 @@ public class MapActivity extends FragmentActivity {
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(LatLng latLng) {
-                if(!mIsDiffusingMode) {
+                if(!mIsDefusingMode) {
                     mPlantBomb = new PlantBombTask(getBaseContext(), mProfile);
                     mPlantBomb.execute(latLng.latitude, latLng.longitude);
 
                     //For testing
-                    mIsDiffusingMode = true;
+                    mIsDefusingMode = true;
                     testingBomb = latLng;
+                    //
                 }
             }
         });
@@ -180,7 +205,7 @@ public class MapActivity extends FragmentActivity {
     // For testing
     // From http://stackoverflow.com/questions/639695/how-to-convert-latitude-or-longitude-to-meters
     private double latLngToMeters(LatLng p1, LatLng p2) {
-        double latMid, m_per_deg_lat, m_per_deg_lon, deltaLat, deltaLon,dist_m;
+        double latMid, m_per_deg_lat, m_per_deg_lon, deltaLat, deltaLon;
 
         latMid = (p1.latitude + p2.latitude) / 2.0;
 
@@ -193,4 +218,5 @@ public class MapActivity extends FragmentActivity {
 
         return Math.sqrt(Math.pow(deltaLat * m_per_deg_lat, 2) + Math.pow(deltaLon * m_per_deg_lon , 2));
     }
+    //
 }

@@ -6,7 +6,7 @@ import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import org.json.JSONArray;
+import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -14,31 +14,29 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class CheckPositionTask  extends AsyncTask<Double, Void, String> {
-    private static final String BASE_URL = "http://localhost/%s/";
-    private static final String SERVICE = "Mobile/CheckPosition/%1$,.2f/%1$,.2f";
-    private static final long[] closePattern = { 0, 200, 1000 };
-    private static final long[] veryClosePattern = { 0, 200, 500 };
-    private static final long[] diffusePattern = { 0, 50, 0 };
+public class DefuseBombTask extends AsyncTask<Integer, Void, String> {
+    public static String mBaseUrl;
+    public static String mService;
 
     private Context mContext;
     private String mProfile;
-    private Button mDiffuseButton;
+    private Button mDefuseButton;
 
-    public CheckPositionTask(Context context, String profile, Button diffuseButton) {
+    public DefuseBombTask(Context context, String profile, Button defuseButton) {
         mContext = context;
         mProfile = profile;
-        mDiffuseButton = diffuseButton;
+        mDefuseButton = defuseButton;
     }
 
     @Override
-    protected String doInBackground(Double... params) {
+    protected String doInBackground(Integer... params) {
         HttpURLConnection urlConnection = null;
         String result = null;
 
         try {
-            URL url = new URL(String.format(BASE_URL, mProfile) + String.format(SERVICE, params[0], params[1]));
+            URL url = new URL(String.format(mBaseUrl, mProfile) + String.format(mService, params[0]));
             urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("POST");
 
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
             result = streamToString(in);
@@ -57,19 +55,20 @@ public class CheckPositionTask  extends AsyncTask<Double, Void, String> {
     protected void onPostExecute(String result) {
         try {
             if(result != null) {
+                Toast msg = null;
                 JSONObject json = new JSONObject(result);
-                Double distance = json.getDouble("distance");
+                boolean isDefused = json.getBoolean("Defused");
 
-                Vibrator mVibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
+                if (isDefused) {
+                    msg = Toast.makeText(mContext, "Bomb defused !", Toast.LENGTH_LONG);
+                    mDefuseButton.setVisibility(View.INVISIBLE);
+                    Vibrator mVibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
+                    mVibrator.cancel();
+                } else
+                    msg = Toast.makeText(mContext, "Bomb not defused !", Toast.LENGTH_LONG);
 
-                if (distance < 100)
-                    mVibrator.vibrate(closePattern, 0);
-                else if (distance < 50)
-                    mVibrator.vibrate(veryClosePattern, 0);
-                else if (distance < 10) {
-                    mVibrator.vibrate(diffusePattern, 0);
-                    mDiffuseButton.setVisibility(View.VISIBLE);
-                }
+                if (msg != null)
+                    msg.show();
             }
         } catch (JSONException e) {
             Log.e("Erreur", "JSONException");

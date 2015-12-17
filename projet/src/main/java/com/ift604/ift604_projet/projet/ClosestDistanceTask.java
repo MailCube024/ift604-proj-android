@@ -6,7 +6,6 @@ import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -14,17 +13,19 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class DiffuseBombTask extends AsyncTask<Double, Void, String> {
-    private static final String BASE_URL = "http://localhost/%s/";
-    private static final String SERVICE = "Mobile/DiffuseBomb/%1$,.2f/%1$,.2f";
+public class ClosestDistanceTask extends AsyncTask<Double, Void, String> {
+    private static final long[] closePattern = { 0, 200, 1000 };
+    private static final long[] veryClosePattern = { 0, 200, 500 };
+    private static final long[] defusePattern = { 0, 50, 0 };
+
+    public static String mBaseUrl;
+    public static String mService;
 
     private Context mContext;
-    private String mProfile;
     private Button mDiffuseButton;
 
-    public DiffuseBombTask(Context context, String profile, Button diffuseButton) {
+    public ClosestDistanceTask(Context context, Button diffuseButton) {
         mContext = context;
-        mProfile = profile;
         mDiffuseButton = diffuseButton;
     }
 
@@ -34,8 +35,9 @@ public class DiffuseBombTask extends AsyncTask<Double, Void, String> {
         String result = null;
 
         try {
-            URL url = new URL(String.format(BASE_URL, mProfile) + String.format(SERVICE, params[0], params[1]));
+            URL url = new URL(mBaseUrl + String.format(mService, params[0], params[1]));
             urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
 
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
             result = streamToString(in);
@@ -54,21 +56,24 @@ public class DiffuseBombTask extends AsyncTask<Double, Void, String> {
     protected void onPostExecute(String result) {
         try {
             if(result != null) {
-                Toast msg = null;
                 JSONObject json = new JSONObject(result);
-                boolean isDiffused = json.getBoolean("result");
+                Integer bombId = json.getInt("BombId");
 
+                if(bombId != -1) {
+                    ((MapActivity) mContext).mBombId = bombId;
+                    Double distance = json.getDouble("Distance");
 
-                if (isDiffused) {
-                    msg = Toast.makeText(mContext, "Bomb diffused !", Toast.LENGTH_LONG);
-                    mDiffuseButton.setVisibility(View.INVISIBLE);
                     Vibrator mVibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
-                    mVibrator.cancel();
-                } else
-                    msg = Toast.makeText(mContext, "Bomb not diffused !", Toast.LENGTH_LONG);
 
-                if (msg != null)
-                    msg.show();
+                    if (distance < 100)
+                        mVibrator.vibrate(closePattern, 0);
+                    else if (distance < 50)
+                        mVibrator.vibrate(veryClosePattern, 0);
+                    else if (distance < 10) {
+                        mVibrator.vibrate(defusePattern, 0);
+                        mDiffuseButton.setVisibility(View.VISIBLE);
+                    }
+                }
             }
         } catch (JSONException e) {
             Log.e("Erreur", "JSONException");
@@ -81,9 +86,8 @@ public class DiffuseBombTask extends AsyncTask<Double, Void, String> {
         String line;
 
         try {
-            while ((line = bufferedReader.readLine()) != null) {
+            while ((line = bufferedReader.readLine()) != null)
                 result += line + "\n";
-            }
         } catch (IOException e) {
             Log.e("Erreur", "IOException");
         }
