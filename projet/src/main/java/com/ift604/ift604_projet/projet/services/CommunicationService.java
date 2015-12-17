@@ -10,6 +10,7 @@ import com.ift604.ift604_projet.projet.utilities.RestGet;
 import com.ift604.ift604_projet.projet.utilities.RestPost;
 import com.ift604.ift604_projet.projet.utilities.RestUtil;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
@@ -58,7 +59,6 @@ public class CommunicationService extends Service {
             communicationProperties.setProperty("port", "60631");
             communicationProperties.setProperty("username", "");
             communicationProperties.setProperty("password", "");
-            communicationProperties.setProperty("email", "");
             communicationProperties.setProperty("region", "0");
             SaveProperties();
         }
@@ -67,8 +67,6 @@ public class CommunicationService extends Service {
     private void SaveProperties() {
         try {
             File file = new File(getFilesDir(),"config.properties");
-//            if(!file.exists())
-//                file.createNewFile();
             FileOutputStream fileOut = new FileOutputStream(file);
             communicationProperties.store(fileOut, "");
             fileOut.close();
@@ -79,11 +77,9 @@ public class CommunicationService extends Service {
         }
     }
 
-    public void ChangeLoginProperties(String username, String password, String email, String region) {
+    public void ChangeLoginProperties(String username, String password) {
         communicationProperties.put("username", username);
         communicationProperties.put("password", password);
-        communicationProperties.put("email", email);
-        communicationProperties.put("region", region);
         SaveProperties();
         Login();
     }
@@ -103,8 +99,6 @@ public class CommunicationService extends Service {
         Map<String,String> m = new HashMap<>();
         m.put("username", communicationProperties.getProperty("username"));
         m.put("password", communicationProperties.getProperty("password"));
-        m.put("email", communicationProperties.getProperty("email"));
-        m.put("region", communicationProperties.getProperty("region"));
 
         return m;
     }
@@ -152,22 +146,66 @@ public class CommunicationService extends Service {
     }
 
     public Map<String,String> GetRegions() {
-        //Get(getServerPath()+ "Regions", null);
         Map<String,String> regions = new HashMap<>();
-        regions.put("0", "Test 0");
-        regions.put("1", "Test 1");
+
+        try {
+            JSONArray test = Get(getServerPath()+ "Region/List", null);
+            for(int i = 0; i < test.length(); ++i) {
+                JSONObject o = test.getJSONObject(i);
+                regions.put(o.getString("id"), o.getString("name"));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         return regions;
     }
 
-    public void Login() {
+    public boolean Login() {
         List<Pair<String,String>> params = new ArrayList<>();
-        params.add(new Pair<>("Username", communicationProperties.getProperty("username")));
-        params.add(new Pair<>("Password", communicationProperties.getProperty("password")));
-        params.add(new Pair<>("Email", communicationProperties.getProperty("email")));
-        params.add(new Pair<>("Region", communicationProperties.getProperty("region")));
-        //Post(getServerPath()+"Login", params);
+        params.add(new Pair<>("username", communicationProperties.getProperty("username")));
+        params.add(new Pair<>("password", communicationProperties.getProperty("password")));
 
-        logged = true;
+        logged = false;
+        try {
+            JSONArray a = Post(getServerPath()+"Account/MLogin", params);
+            logged = a.getBoolean(0);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return logged;
+    }
+
+    public Map<String, String> Register(String username, String password, String password2, String email, String region) {
+        List<Pair<String,String>> params = new ArrayList<>();
+        params.add(new Pair<>("username", username));
+        params.add(new Pair<>("password", password));
+        params.add(new Pair<>("confirmPassword", password2));
+        params.add(new Pair<>("email", email));
+        params.add(new Pair<>("regionId", region));
+
+        Map<String,String> m = new HashMap<>();
+        logged = false;
+        try {
+            JSONArray a = Post(getServerPath()+"Account/MRegister", params);
+            logged = !Boolean.class.isInstance(a.get(0));
+            if(logged) {
+                JSONObject test = a.getJSONObject(0);
+                m.put("username", test.getString("Username"));
+                //m.put("email", test.getString("Email"));
+                m.put("region", test.getString("RegionId"));
+                logged = true;
+
+                communicationProperties.put("username", username);
+                communicationProperties.put("password", password);
+                communicationProperties.put("region", region);
+                SaveProperties();
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return m;
     }
 }

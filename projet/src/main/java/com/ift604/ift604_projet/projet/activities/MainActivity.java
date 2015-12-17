@@ -1,6 +1,5 @@
 package com.ift604.ift604_projet.projet.activities;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -10,7 +9,6 @@ import com.ift604.ift604_projet.projet.R;
 
 public class MainActivity extends CommunicationActivity {
 
-    Button btnLogin;
     Button btnRanking;
     Button btnSettings;
     Button btnStatistics;
@@ -21,16 +19,15 @@ public class MainActivity extends CommunicationActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        btnLogin = (Button)findViewById(R.id.btnLogin);
         btnRanking = (Button)findViewById(R.id.btnRanking);
         btnSettings = (Button)findViewById(R.id.btnSettings);
         btnStatistics = (Button)findViewById(R.id.btnStatistics);
         btnEvent = (Button)findViewById(R.id.btnEvent);
 
-        btnLogin.setOnClickListener(new View.OnClickListener() {
+        btnSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                startActivity(new Intent(MainActivity.this, SettingActivity.class));
             }
         });
 
@@ -38,13 +35,6 @@ public class MainActivity extends CommunicationActivity {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, RankingActivity.class));
-            }
-        });
-
-        btnSettings.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, SettingActivity.class));
             }
         });
 
@@ -66,5 +56,11 @@ public class MainActivity extends CommunicationActivity {
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
+
+        boolean logged = boundService.Login();
+
+        btnRanking.setEnabled(logged);
+        btnStatistics.setEnabled(logged);
+        btnEvent.setEnabled(logged);
     }
 }

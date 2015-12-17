@@ -11,10 +11,12 @@
     <string name="email">Email</string>
     <string name="event">Event</string>
     <string name="login">Login</string>
+    <string name="confirm_password">Confirm Password</string>
     <string name="password">Password</string>
     <string name="port">Port</string>
     <string name="ranking">Ranking</string>
     <string name="region">Region</string>
+    <string name="register">Register</string>
     <string name="save">Save</string>
     <string name="server">Server</string>
     <string name="settings">Settings</string>

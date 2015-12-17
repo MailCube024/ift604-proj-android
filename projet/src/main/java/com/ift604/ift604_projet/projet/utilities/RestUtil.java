@@ -1,6 +1,9 @@
 package com.ift604.ift604_projet.projet.utilities;
 
 import android.util.Pair;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.net.URLEncoder;
@@ -51,4 +54,37 @@ public class RestUtil {
         return result;
     }
 
+    public static JSONArray parseJSON(String jsonString) {
+        if(jsonString.equals(null) || jsonString.equals("")) {
+            return new JSONArray();
+        } else if(jsonString.startsWith("[")) {
+            JSONArray json = null;
+
+            try {
+                json = new JSONArray(jsonString);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            return json;
+        } else if(jsonString.startsWith("{")) {
+            JSONArray json = new JSONArray();
+            JSONObject obj = null;
+
+            try {
+                obj = new JSONObject(jsonString);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            json.put(obj);
+            return json;
+        } else if(Boolean.toString(true).equals(jsonString) || Boolean.toString(false).equals(jsonString)) {
+            JSONArray a = new JSONArray();
+            a.put(Boolean.parseBoolean(jsonString));
+            return a;
+        } else {
+            return new JSONArray();
+        }
+    }
 }

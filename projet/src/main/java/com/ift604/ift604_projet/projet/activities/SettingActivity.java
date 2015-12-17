@@ -13,6 +13,10 @@ import java.util.Map;
  * Created by Benoit on 2015-12-15.
  */
 public class SettingActivity extends CommunicationActivity {
+
+    Button btnLogin;
+    Button btnRegister;
+
     EditText txtServer;
     EditText txtPort;
     Button btnSave;
@@ -22,9 +26,25 @@ public class SettingActivity extends CommunicationActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
+        btnLogin = (Button)findViewById(R.id.btnLogin);
+        btnRegister = (Button)findViewById(R.id.btnRegister);
         txtServer = (EditText)findViewById(R.id.txtServer);
         txtPort = (EditText)findViewById(R.id.txtPort);
         btnSave = (Button)findViewById(R.id.btnSave);
+
+        btnLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(SettingActivity.this, LoginActivity.class));
+            }
+        });
+
+        btnRegister.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(SettingActivity.this, RegisterActivity.class));
+            }
+        });
 
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override

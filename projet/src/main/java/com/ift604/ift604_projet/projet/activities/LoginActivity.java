@@ -19,8 +19,6 @@ public class LoginActivity extends CommunicationActivity {
 
     EditText txtUsername;
     EditText txtPassword;
-    EditText txtEmail;
-    Spinner dropRegion;
     Button btnLogin;
 
     @Override
@@ -30,8 +28,6 @@ public class LoginActivity extends CommunicationActivity {
 
         txtUsername = (EditText)findViewById(R.id.txtUsername);
         txtPassword = (EditText)findViewById(R.id.txtPassword);
-        txtEmail = (EditText)findViewById(R.id.txtEmail);
-        dropRegion = (Spinner)findViewById(R.id.dropRegion);
         btnLogin = (Button)findViewById(R.id.btnLogin);
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
@@ -39,10 +35,8 @@ public class LoginActivity extends CommunicationActivity {
             public void onClick(View v) {
                 String username = txtUsername.getText().toString();
                 String password = txtPassword.getText().toString();
-                String email = txtEmail.getText().toString();
-                String region = String.valueOf(dropRegion.getSelectedItemPosition());
 
-                boundService.ChangeLoginProperties(username, password, email, region);
+                boundService.ChangeLoginProperties(username, password);
                 if(boundService.IsLogged())
                     startActivity(new Intent(LoginActivity.this, MainActivity.class));
             }
@@ -54,20 +48,7 @@ public class LoginActivity extends CommunicationActivity {
         super.onServiceConnected();
 
         Map<String,String> m = boundService.GetLoginInfo();
-        Map<String,String> regions = boundService.GetRegions();
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(LoginActivity.this, android.R.layout.simple_spinner_item, new ArrayList<>(regions.values()));
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        dropRegion.setAdapter(adapter);
-
-        int position = 0;
-        for(int i = 0; i < regions.keySet().toArray().length; ++i) {
-            if(regions.keySet().toArray()[i].equals(m.get("region")))
-                position = i;
-        }
-
         txtUsername.setText(m.get("username"));
         txtPassword.setText(m.get("password"));
-        txtEmail.setText(m.get("email"));
-        dropRegion.setSelection(position);
     }
 }

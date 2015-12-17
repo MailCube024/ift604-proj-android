@@ -18,15 +18,7 @@
             android:id="@+id/btnSettings"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight=".5"
             android:text="@string/settings"/>
-
-        <Button
-            android:id="@+id/btnLogin"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight=".5"
-            android:text="@string/login"/>
     </LinearLayout>
 
     <Button

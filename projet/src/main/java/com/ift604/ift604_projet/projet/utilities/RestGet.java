@@ -41,14 +41,6 @@ public class RestGet extends AsyncTask<String, String, JSONArray> {
             return null;
         }
 
-        JSONArray json = null;
-
-        try {
-            json = new JSONArray(result);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return json;
+        return RestUtil.parseJSON(result);
     }
 }
