@@ -46,6 +46,22 @@
                 android:label="@string/title_activity_statistics" >
         </activity>
 
+        <activity
+                android:name=".activities.LoginActivity"
+                android:label="@string/title_activity_login" >
+        </activity>
+
+        <activity
+                android:name=".activities.SettingActivity"
+                android:label="@string/title_activity_settings" >
+        </activity>
+
+        <service
+                android:name=".services.CommunicationService"
+                android:enabled="true"
+                android:exported="true" >
+        </service>
+
         <service
             android:name=".LocationService"
             android:enabled="true"

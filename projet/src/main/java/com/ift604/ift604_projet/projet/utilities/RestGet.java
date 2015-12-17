@@ -1,21 +1,26 @@
 package com.ift604.ift604_projet.projet.utilities;
 
 import android.os.AsyncTask;
+import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 /**
  * Created by Benoit on 2015-12-13.
  */
-public class RestCall extends AsyncTask<String, String, JSONObject> {
+public class RestGet extends AsyncTask<String, String, JSONArray> {
 
     @Override
-    protected JSONObject doInBackground(String... params) {
+    protected JSONArray doInBackground(String... params) {
         String urlString=params[0]; // URL to call
+        String par = params[1];
+        if(par != null && par != "")
+            urlString += "?" + par;
+
         String result = "";
         InputStream in = null;
 
@@ -23,35 +28,27 @@ public class RestCall extends AsyncTask<String, String, JSONObject> {
         try {
             URL url = new URL(urlString);
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+            urlConnection.connect();
+            //Object test = urlConnection.getContent();
             in = new BufferedInputStream(urlConnection.getInputStream());
 
             if(in != null)
-                result = convertInputStreamToString(in);
+                result = RestUtil.convertInputStreamToString(in);
 
         } catch (Exception e ) {
             e.printStackTrace();
             return null;
         }
 
-        JSONObject json = null;
+        JSONArray json = null;
 
         try {
-            json = new JSONObject(result);
+            json = new JSONArray(result);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
         return json;
-    }
-
-    private static String convertInputStreamToString(InputStream inputStream) throws IOException {
-        BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
-        String line;
-        String result = "";
-        while((line = bufferedReader.readLine()) != null)
-            result += line;
-
-        inputStream.close();
-        return result;
     }
 }
