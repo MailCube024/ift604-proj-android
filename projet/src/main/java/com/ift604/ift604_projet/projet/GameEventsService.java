@@ -1,13 +1,10 @@
 package com.ift604.ift604_projet.projet;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
-import android.os.Vibrator;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.view.View;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -18,10 +15,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class GameEventsService extends Service {
-    private static final String BASE_URL = "http://localhost:60631/";
-    private static final String EVENTS_SERVICE = "GameEvents/State";
+    public static String mBaseUrl;
+    public static String mService;
 
     private Timer timer;
+    private String mUsername;
     private LocalBroadcastManager mBroadcaster;
 
     @Override
@@ -33,6 +31,9 @@ public class GameEventsService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("GameEvents", "Service started !");
         mBroadcaster = LocalBroadcastManager.getInstance(this);
+        mUsername = intent.getStringExtra("username");
+
+        Log.d("Username", mUsername);
 
         TimerTask task = new TimerTask() {
             public void run() {
@@ -40,7 +41,7 @@ public class GameEventsService extends Service {
                     HttpURLConnection urlConnection = null;
                     String result = null;
 
-                    URL url = new URL(BASE_URL + EVENTS_SERVICE);
+                    URL url = new URL(mBaseUrl + String.format(mService, mUsername));
                     urlConnection = (HttpURLConnection) url.openConnection();
                     urlConnection.setRequestMethod("GET");
 
@@ -49,10 +50,10 @@ public class GameEventsService extends Service {
 
                     if (result != null) {
                         JSONObject json = new JSONObject(result);
-                        String gameEvents = json.getString("State");
+                        Integer state = json.getInt("State");
                         Log.d("GameEvents", "Received !");
-                        Intent intent = new Intent("State");
-                        intent.putExtra("GameEvents", gameEvents);
+                        Intent intent = new Intent("GameEvents");
+                        intent.putExtra("State", state);
                         mBroadcaster.sendBroadcast(intent);
                     }
                 } catch (JSONException e) {

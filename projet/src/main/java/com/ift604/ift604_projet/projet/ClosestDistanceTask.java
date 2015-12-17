@@ -1,8 +1,10 @@
 package com.ift604.ift604_projet.projet;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Vibrator;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -12,6 +14,7 @@ import org.json.JSONObject;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Locale;
 
 public class ClosestDistanceTask extends AsyncTask<Double, Void, String> {
     private static final long[] closePattern = { 0, 200, 1000 };
@@ -22,11 +25,15 @@ public class ClosestDistanceTask extends AsyncTask<Double, Void, String> {
     public static String mService;
 
     private Context mContext;
-    private Button mDiffuseButton;
+    private Button mDefuseButton;
+    private LocalBroadcastManager mBroadcaster;
+    public String mUsername;
 
-    public ClosestDistanceTask(Context context, Button diffuseButton) {
+    public ClosestDistanceTask(Context context, Button defuseButton, String username) {
         mContext = context;
-        mDiffuseButton = diffuseButton;
+        mDefuseButton = defuseButton;
+        mUsername = username;
+        mBroadcaster = LocalBroadcastManager.getInstance(context);
     }
 
     @Override
@@ -35,7 +42,7 @@ public class ClosestDistanceTask extends AsyncTask<Double, Void, String> {
         String result = null;
 
         try {
-            URL url = new URL(mBaseUrl + String.format(mService, params[0], params[1]));
+            URL url = new URL(mBaseUrl + String.format(Locale.US, mService, params[0], params[1], mUsername));
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
 
@@ -60,19 +67,22 @@ public class ClosestDistanceTask extends AsyncTask<Double, Void, String> {
                 Integer bombId = json.getInt("BombId");
 
                 if(bombId != -1) {
-                    ((MapActivity) mContext).mBombId = bombId;
+                    Intent intent = new Intent("Distance");
+                    intent.putExtra("BombId", bombId);
+
+                    mBroadcaster.sendBroadcast(intent);
+
                     Double distance = json.getDouble("Distance");
 
                     Vibrator mVibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
 
-                    if (distance < 100)
-                        mVibrator.vibrate(closePattern, 0);
-                    else if (distance < 50)
-                        mVibrator.vibrate(veryClosePattern, 0);
-                    else if (distance < 10) {
+                    if (distance < 10) {
                         mVibrator.vibrate(defusePattern, 0);
-                        mDiffuseButton.setVisibility(View.VISIBLE);
-                    }
+                        mDefuseButton.setVisibility(View.VISIBLE);
+                    } else if (distance < 50)
+                        mVibrator.vibrate(veryClosePattern, 0);
+                    else if (distance < 100)
+                        mVibrator.vibrate(closePattern, 0);
                 }
             }
         } catch (JSONException e) {

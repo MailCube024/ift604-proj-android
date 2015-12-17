@@ -19,13 +19,13 @@ public class DefuseBombTask extends AsyncTask<Integer, Void, String> {
     public static String mService;
 
     private Context mContext;
-    private String mProfile;
     private Button mDefuseButton;
+    private String mUsername;
 
-    public DefuseBombTask(Context context, String profile, Button defuseButton) {
+    public DefuseBombTask(Context context, Button defuseButton, String username) {
         mContext = context;
-        mProfile = profile;
         mDefuseButton = defuseButton;
+        mUsername = username;
     }
 
     @Override
@@ -34,9 +34,13 @@ public class DefuseBombTask extends AsyncTask<Integer, Void, String> {
         String result = null;
 
         try {
-            URL url = new URL(String.format(mBaseUrl, mProfile) + String.format(mService, params[0]));
+            URL url = new URL(mBaseUrl + String.format(mService, params[0], mUsername));
             urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setRequestMethod("POST");
+            // Use POST method
+            urlConnection.setRequestMethod( "POST" );
+            urlConnection.setDoOutput(true);
+            urlConnection.setRequestProperty( "Content-Type", "application/json");
+            urlConnection.setRequestProperty( "Content-Length", new Integer(0).toString());
 
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
             result = streamToString(in);

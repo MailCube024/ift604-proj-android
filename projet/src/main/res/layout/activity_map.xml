@@ -20,6 +20,16 @@
           android:name="com.google.android.gms.maps.SupportMapFragment">
 
     <Button
+            android:id="@+id/stateButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left|top"
+            android:text="..."
+            android:padding="10dp"
+            android:layout_marginTop="20dp"
+            android:paddingLeft="10dp"/>
+
+    <Button
             android:id="@+id/defuseButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
