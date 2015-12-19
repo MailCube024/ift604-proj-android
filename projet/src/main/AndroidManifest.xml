@@ -32,7 +32,7 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".MapActivity"
+            android:name=".activities.MapActivity"
             android:label="@string/title_activity_map" >
         </activity>
 
@@ -68,12 +68,12 @@
         </service>
 
         <service
-            android:name=".LocationService"
+            android:name=".services.LocationService"
             android:enabled="true"
             android:exported="true" >
         </service>
         <service
-            android:name=".GameEventsService"
+            android:name=".services.GameEventsService"
             android:enabled="true"
             android:exported="true" >
         </service>

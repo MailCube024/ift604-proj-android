@@ -51,7 +51,7 @@ public class RestPost extends AsyncTask<String, String, JSONArray> {
             }
         } catch (Exception e ) {
             e.printStackTrace();
-            return null;
+            return RestUtil.parseJSON(null);
         } finally {
             try {
                 if(os != null)

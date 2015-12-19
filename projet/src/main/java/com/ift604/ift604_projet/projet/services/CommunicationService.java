@@ -28,7 +28,7 @@ public class CommunicationService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        if(communicationProperties == null) {
+        if (communicationProperties == null) {
             LoadProperties();
             Login();
         }
@@ -50,7 +50,7 @@ public class CommunicationService extends Service {
         communicationProperties = new Properties();
 
         try {
-            File file = new File(getFilesDir(),"config.properties");
+            File file = new File(getFilesDir(), "config.properties");
             FileInputStream fileInput = new FileInputStream(file);
             communicationProperties.load(fileInput);
             fileInput.close();
@@ -66,13 +66,13 @@ public class CommunicationService extends Service {
 
     private void SaveProperties() {
         try {
-            File file = new File(getFilesDir(),"config.properties");
+            File file = new File(getFilesDir(), "config.properties");
             FileOutputStream fileOut = new FileOutputStream(file);
             communicationProperties.store(fileOut, "");
             fileOut.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -95,16 +95,20 @@ public class CommunicationService extends Service {
         return logged;
     }
 
-    public Map<String,String> GetLoginInfo() {
-        Map<String,String> m = new HashMap<>();
+    public String GetUsername() {
+        return communicationProperties.getProperty("username");
+    }
+
+    public Map<String, String> GetLoginInfo() {
+        Map<String, String> m = new HashMap<>();
         m.put("username", communicationProperties.getProperty("username"));
         m.put("password", communicationProperties.getProperty("password"));
 
         return m;
     }
 
-    public Map<String,String> GetSettings() {
-        Map<String,String> m = new HashMap<>();
+    public Map<String, String> GetSettings() {
+        Map<String, String> m = new HashMap<>();
         m.put("server", communicationProperties.getProperty("server"));
         m.put("port", communicationProperties.getProperty("port"));
 
@@ -136,14 +140,14 @@ public class CommunicationService extends Service {
     }
 
     public List<String> GetRanking() {
-        List<Pair<String,String>> params = new ArrayList<>();
+        List<Pair<String, String>> params = new ArrayList<>();
         params.add(new Pair<>("username", communicationProperties.getProperty("username")));
 
         List<String> l = new ArrayList<>();
 
         try {
             JSONArray a = Get(getServerPath() + "Rankings/List", params);
-            for(int i = 0; i < a.length(); ++i) {
+            for (int i = 0; i < a.length(); ++i) {
                 JSONObject o = a.getJSONObject(i);
                 l.add(i + " - " + o.getString("Name") + " - " + o.getString("Score") + " points");
             }
@@ -154,12 +158,12 @@ public class CommunicationService extends Service {
         return l;
     }
 
-    public Map<String,String> GetRegions() {
-        Map<String,String> regions = new HashMap<>();
+    public Map<String, String> GetRegions() {
+        Map<String, String> regions = new HashMap<>();
 
         try {
-            JSONArray test = Get(getServerPath()+ "Region/List", null);
-            for(int i = 0; i < test.length(); ++i) {
+            JSONArray test = Get(getServerPath() + "Region/List", null);
+            for (int i = 0; i < test.length(); ++i) {
                 JSONObject o = test.getJSONObject(i);
                 regions.put(o.getString("id"), o.getString("name"));
             }
@@ -171,13 +175,13 @@ public class CommunicationService extends Service {
     }
 
     public boolean Login() {
-        List<Pair<String,String>> params = new ArrayList<>();
+        List<Pair<String, String>> params = new ArrayList<>();
         params.add(new Pair<>("username", communicationProperties.getProperty("username")));
         params.add(new Pair<>("password", communicationProperties.getProperty("password")));
 
         logged = false;
         try {
-            JSONArray a = Post(getServerPath()+"Account/MLogin", params);
+            JSONArray a = Post(getServerPath() + "Account/MLogin", params);
             logged = a.getBoolean(0);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -187,19 +191,19 @@ public class CommunicationService extends Service {
     }
 
     public Map<String, String> Register(String username, String password, String password2, String email, String region) {
-        List<Pair<String,String>> params = new ArrayList<>();
+        List<Pair<String, String>> params = new ArrayList<>();
         params.add(new Pair<>("username", username));
         params.add(new Pair<>("password", password));
         params.add(new Pair<>("confirmPassword", password2));
         params.add(new Pair<>("email", email));
         params.add(new Pair<>("regionId", region));
 
-        Map<String,String> m = new HashMap<>();
+        Map<String, String> m = new HashMap<>();
         logged = false;
         try {
-            JSONArray a = Post(getServerPath()+"Account/MRegister", params);
+            JSONArray a = Post(getServerPath() + "Account/MRegister", params);
             logged = !Boolean.class.isInstance(a.get(0));
-            if(logged) {
+            if (logged) {
                 JSONObject test = a.getJSONObject(0);
                 m.put("username", test.getString("Username"));
                 //m.put("email", test.getString("Email"));
@@ -216,5 +220,65 @@ public class CommunicationService extends Service {
         }
 
         return m;
+    }
+
+    public boolean DefuseBomb(Integer bombId) {
+        List<Pair<String, String>> params = new ArrayList<>();
+        params.add(new Pair<>("username", communicationProperties.getProperty("username")));
+        params.add(new Pair<>("bombId", bombId.toString()));
+
+        try {
+            JSONArray a = Post(getServerPath() + "Bomb/Defuse", params);
+            JSONObject json = a.getJSONObject(0);
+            return json.getBoolean("Defused");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Pair<Integer, Double> ClosestBomb(Double latitude, Double longitude) {
+        List<Pair<String, String>> params = new ArrayList<>();
+        params.add(new Pair<>("username", communicationProperties.getProperty("username")));
+        params.add(new Pair<>("lattitude", latitude.toString()));
+        params.add(new Pair<>("longitude", longitude.toString()));
+
+        try {
+            JSONArray a = Get(getServerPath() + "Bomb/ClosestDistance", params);
+            JSONObject json = a.getJSONObject(0);
+            Integer bombId = json.getInt("BombId");
+            Double distance = json.getDouble("Distance");
+
+            return new Pair<>(bombId, distance);
+        } catch (Exception e) {
+            return new Pair<>(-1, new Double(-1));
+        }
+    }
+
+    public boolean PlantBomb(Double latitude, Double longitude) {
+        List<Pair<String, String>> params = new ArrayList<>();
+        params.add(new Pair<>("username", communicationProperties.getProperty("username")));
+        params.add(new Pair<>("lattitude", latitude.toString()));
+        params.add(new Pair<>("longitude", longitude.toString()));
+
+        try {
+            JSONArray a = Post(getServerPath() + "Bomb/Plant", params);
+            JSONObject json = a.getJSONObject(0);
+            return json.getBoolean("Planted");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Integer GetEventState() {
+        List<Pair<String, String>> params = new ArrayList<>();
+        params.add(new Pair<>("username", communicationProperties.getProperty("username")));
+
+        try {
+            JSONArray a = Get(getServerPath() + "Events/State", params);
+            JSONObject json = a.getJSONObject(0);
+            return json.getInt("State");
+        } catch (Exception e) {
+            return -1;
+        }
     }
 }
