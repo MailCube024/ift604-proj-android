@@ -1,4 +1,4 @@
-package com.ift604.ift604_projet.projet;
+package com.ift604.ift604_projet.projet.services;
 
 import android.location.Location;
 import android.os.Bundle;

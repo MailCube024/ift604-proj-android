@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import com.ift604.ift604_projet.projet.MapActivity;
 import com.ift604.ift604_projet.projet.R;
 
 public class MainActivity extends CommunicationActivity {

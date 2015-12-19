@@ -16,7 +16,7 @@
           map:uiTiltGestures="true"
           map:uiZoomControls="false"
           map:uiZoomGestures="true"
-          tools:context="com.ift604.ift604_projet.projet.MapActivity"
+          tools:context="com.ift604.ift604_projet.projet.activities.MapActivity"
           android:name="com.google.android.gms.maps.SupportMapFragment">
 
     <Button
